@@ -1,0 +1,23 @@
+{
+  "name": "role-sc-web-crawler",
+  "version": "1.0.0",
+  "description": "Web crawler modular com Playwright e TypeScript",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.42.0",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.42.0",
+    "mongodb": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2"
+  }
+}
