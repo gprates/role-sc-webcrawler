@@ -1,4 +1,3 @@
-import { firefox } from 'playwright';
 import {
   DEFAULT_PAGE_TIMEOUT_MS,
   DEFAULT_VIEWPORT,
@@ -9,6 +8,7 @@ import type { BrowserContext } from '../types/crawler.types';
 const isLambda = (): boolean => !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 const createLocalBrowser = async (): Promise<BrowserContext> => {
+  const { firefox } = await import('playwright');
   const browser = await firefox.launch(getFirefoxLaunchOptions());
   const context = await browser.newContext({ viewport: DEFAULT_VIEWPORT });
   const page = await context.newPage();

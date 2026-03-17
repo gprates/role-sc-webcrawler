@@ -6,3 +6,5 @@ test-results/
 playwright-report/
 
 .history/
+lambda-build
+lambda.zip
