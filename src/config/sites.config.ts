@@ -29,6 +29,12 @@ export const SITES = {
     listingUrl: 'https://culturabc.com.br/agenda-cultural/',
     municipality: 'Balneário Camboriú',
   },
+  PORTO_BELO: {
+    name: 'Município de Porto Belo',
+    baseUrl: 'https://portobelo.sc.gov.br',
+    listingUrl: 'https://portobelo.sc.gov.br/category/noticias/eventos/',
+    municipality: 'Porto Belo',
+  },
 } as const satisfies Record<string, SiteConfig>;
 
 export type SiteKey = keyof typeof SITES;

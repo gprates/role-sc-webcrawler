@@ -4,16 +4,19 @@ import { CamboriuCrawler } from './services/camboriu.crawler';
 import { ItajaiCulturalCrawler } from './services/itajai-cultural.crawler';
 import { BombinhasCrawler } from './services/bombinhas.crawler';
 import { BalnearioCamboriuCrawler } from './services/balneario-camboriu.crawler';
+import { PortoBeloCrawler } from './services/porto-belo.crawler';
 import type { CamboriuData } from './services/camboriu.crawler';
 import type { ItajaiCulturalData } from './services/itajai-cultural.crawler';
 import type { BombinhasData } from './services/bombinhas.crawler';
 import type { BalnearioCamboriuData } from './services/balneario-camboriu.crawler';
+import type { PortoBeloData } from './services/porto-belo.crawler';
 
 export type CrawlerKey =
   | 'camboriu'
   | 'itajai-cultural'
   | 'bombinhas'
-  | 'balneario-camboriu';
+  | 'balneario-camboriu'
+  | 'porto-belo';
 
 export interface CrawlerEntry {
   label: string;
@@ -40,6 +43,10 @@ export const CRAWLERS: Record<CrawlerKey, CrawlerEntry> = {
     label: 'Fundacao Cultural de Balneario Camboriu',
     create: (maxEvents) =>
       new BalnearioCamboriuCrawler(maxEvents) as BaseCrawler<BalnearioCamboriuData>,
+  },
+  'porto-belo': {
+    label: 'Municipio de Porto Belo',
+    create: (maxPages) => new PortoBeloCrawler(maxPages) as BaseCrawler<PortoBeloData>,
   },
 };
 
