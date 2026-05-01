@@ -3,11 +3,17 @@ import type { RawCrawlInsert } from '../types/raw-crawl.types';
 import { CamboriuCrawler } from './services/camboriu.crawler';
 import { ItajaiCulturalCrawler } from './services/itajai-cultural.crawler';
 import { BombinhasCrawler } from './services/bombinhas.crawler';
+import { BalnearioCamboriuCrawler } from './services/balneario-camboriu.crawler';
 import type { CamboriuData } from './services/camboriu.crawler';
 import type { ItajaiCulturalData } from './services/itajai-cultural.crawler';
 import type { BombinhasData } from './services/bombinhas.crawler';
+import type { BalnearioCamboriuData } from './services/balneario-camboriu.crawler';
 
-export type CrawlerKey = 'camboriu' | 'itajai-cultural' | 'bombinhas';
+export type CrawlerKey =
+  | 'camboriu'
+  | 'itajai-cultural'
+  | 'bombinhas'
+  | 'balneario-camboriu';
 
 export interface CrawlerEntry {
   label: string;
@@ -29,6 +35,11 @@ export const CRAWLERS: Record<CrawlerKey, CrawlerEntry> = {
   bombinhas: {
     label: 'Fundacao Municipal de Cultura de Bombinhas',
     create: (maxPages) => new BombinhasCrawler(maxPages) as BaseCrawler<BombinhasData>,
+  },
+  'balneario-camboriu': {
+    label: 'Fundacao Cultural de Balneario Camboriu',
+    create: (maxEvents) =>
+      new BalnearioCamboriuCrawler(maxEvents) as BaseCrawler<BalnearioCamboriuData>,
   },
 };
 

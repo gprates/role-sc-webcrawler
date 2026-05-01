@@ -23,6 +23,12 @@ export const SITES = {
     listingUrl: 'https://www.culturabombinhas.com.br/noticias',
     municipality: 'Bombinhas',
   },
+  BALNEARIO_CAMBORIU: {
+    name: 'Fundação Cultural de Balneário Camboriú',
+    baseUrl: 'https://culturabc.com.br',
+    listingUrl: 'https://culturabc.com.br/agenda-cultural/',
+    municipality: 'Balneário Camboriú',
+  },
 } as const satisfies Record<string, SiteConfig>;
 
 export type SiteKey = keyof typeof SITES;
