@@ -17,6 +17,12 @@ export const SITES = {
     listingUrl: 'https://fundacaocultural.itajai.sc.gov.br/noticias/',
     municipality: 'Itajaí',
   },
+  BOMBINHAS: {
+    name: 'Fundação Municipal de Cultura de Bombinhas',
+    baseUrl: 'https://www.culturabombinhas.com.br',
+    listingUrl: 'https://www.culturabombinhas.com.br/noticias',
+    municipality: 'Bombinhas',
+  },
 } as const satisfies Record<string, SiteConfig>;
 
 export type SiteKey = keyof typeof SITES;
