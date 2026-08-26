@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@playwright/test':
-        specifier: ^1.42.0
-        version: 1.58.2
       '@sparticuz/chromium':
         specifier: ^143.0.4
         version: 143.0.4
@@ -20,19 +17,22 @@ importers:
       mongodb:
         specifier: ^7.1.0
         version: 7.1.0
-      playwright:
-        specifier: ^1.42.0
-        version: 1.58.2
       playwright-core:
         specifier: ^1.58.2
+        version: 1.58.2
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.42.0
+        version: 1.58.2
+      '@types/node':
+        specifier: ^20.11.30
+        version: 20.19.37
+      playwright:
+        specifier: ^1.42.0
         version: 1.58.2
       pnpm:
         specifier: ^10.32.1
         version: 10.32.1
-    devDependencies:
-      '@types/node':
-        specifier: ^20.11.30
-        version: 20.19.37
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@20.19.37)(typescript@5.9.3)
