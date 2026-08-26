@@ -58,11 +58,14 @@ interface RawCrawl {
   url: string;            // URL original do artigo
   title: string;          // título do artigo
   rawText: string;        // texto completo do artigo (título + data + corpo)
+  imageUrl: string | null; // URL absoluta da imagem de capa da publicação, ou null se não houver
   publishedAt: string;    // data de publicação como string do site
   crawledAt: Date;        // quando foi coletado
   processed: boolean;     // false = ainda não passou pela IA
 }
 ```
+
+> **Atualização (2026-08-26):** o campo `imageUrl` foi adicionado ao crawler (`role-sc-web-crawler`) para os 5 municípios. É extraído do card da listagem (ou da página do artigo, no caso de Balneário Camboriú) e sempre resolvido para URL absoluta antes de salvar — nunca vem relativo. O nlp-processor **não precisa** chamar IA para preencher esse campo: é só repassar o valor de `raw_crawls.imageUrl` direto para o documento salvo em `eventos` (ver seção 4). Nem toda publicação tem imagem — `null` é um valor esperado e deve ser tratado como tal (não como erro).
 
 **Exemplos reais de `rawText`:**
 
@@ -101,6 +104,7 @@ interface Evento {
   data?: string;           // data do evento (não da publicação)
   horario?: string;        // ex: "19h", "10h às 22h"
   local?: string;          // nome do local, praça, endereço
+  imageUrl: string | null; // herdado direto de raw_crawl.imageUrl (sem passar pela IA)
   municipio: string;       // herdado do raw_crawl
   site: string;            // herdado do raw_crawl
   url: string;             // URL da notícia original
@@ -110,7 +114,7 @@ interface Evento {
 }
 ```
 
-**Campos opcionais (`?`) recebem `null` quando a IA não encontrar a informação.**
+**Campos opcionais (`?`) recebem `null` quando a IA não encontrar a informação.** `imageUrl` é diferente: não é opcional nem inferido pela IA — é uma cópia 1:1 de `raw_crawl.imageUrl`, feita no código do `event.processor.ts` (ou onde o Evento for montado), não no prompt do Groq. É o campo que o app vai usar para mostrar a foto de capa na listagem/detalhe do evento.
 
 **Deduplicação sugerida:** por `url` (um evento por artigo) ou por `titulo + data + municipio`.
 
