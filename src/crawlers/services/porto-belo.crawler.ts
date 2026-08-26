@@ -4,12 +4,14 @@ import { SITES } from '../../config/sites.config';
 import { RawCrawlInsert } from '../../types/raw-crawl.types';
 import { navigateTo, elementExists, getInnerText } from '../../utils/page.utils';
 import { WaitStrategy } from '../../enums/wait-strategy.enum';
+import { normalizeImageCandidates } from '../../utils/image.utils';
 
 interface NewsCard {
   url: string;
   title: string;
   date: string;
   excerpt: string;
+  imageCandidates: string[];
 }
 
 export interface PortoBeloData {
@@ -24,6 +26,7 @@ const SELECTORS = {
     TITLE_LINK: '.entry-title a',
     DATE: 'time.entry-date.published',
     EXCERPT: '.entry-content p',
+    IMAGE: '.featured-image img',
   },
   ARTICLE: {
     CONTENT: '.entry-content',
@@ -96,7 +99,15 @@ export class PortoBeloCrawler extends BaseCrawler<PortoBeloData> {
             const dateEl = article.querySelector(sel.DATE);
             const date = dateEl?.getAttribute('datetime') ?? '';
             const excerpt = article.querySelector(sel.EXCERPT)?.textContent?.trim() ?? '';
-            return { url, title, date, excerpt };
+
+            const img = article.querySelector(sel.IMAGE);
+            const imageCandidates = img
+              ? [img.getAttribute('src'), img.getAttribute('data-src'), img.getAttribute('srcset')].filter(
+                  (v): v is string => !!v,
+                )
+              : [];
+
+            return { url, title, date, excerpt, imageCandidates };
           })
           .filter((c) => !!c.url && !!c.title),
       SELECTORS.LISTING,
@@ -127,12 +138,15 @@ export class PortoBeloCrawler extends BaseCrawler<PortoBeloData> {
   }
 
   private buildRawCrawl(card: NewsCard, body: string): RawCrawlInsert {
+    const imageUrl = normalizeImageCandidates(card.imageCandidates, SITE.baseUrl);
+
     return {
       site: SITE.name,
       municipality: SITE.municipality,
       url: card.url,
       title: card.title,
       rawText: `${card.title}\n\n${card.date}\n\n${body}`,
+      imageUrl,
       publishedAt: card.date,
       crawledAt: new Date(),
       processed: false,

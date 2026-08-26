@@ -8,6 +8,7 @@
     "build": "tsc",
     "dev": "ts-node src/index.ts",
     "invoke": "ts-node src/invoke-local.ts",
+    "inspect:images": "ts-node src/inspect-images.ts",
     "build:lambda": "tsc && node scripts/package-lambda.js",
     "lint": "eslint src/**/*.ts"
   },

@@ -4,12 +4,14 @@ import { SITES } from '../../config/sites.config';
 import { RawCrawlInsert } from '../../types/raw-crawl.types';
 import { navigateTo, elementExists, getInnerText } from '../../utils/page.utils';
 import { WaitStrategy } from '../../enums/wait-strategy.enum';
+import { normalizeImageCandidates } from '../../utils/image.utils';
 
 interface NewsCard {
   url: string;
   title: string;
   date: string;
   excerpt: string;
+  imageCandidates: string[];
 }
 
 export interface BombinhasData {
@@ -24,6 +26,7 @@ const SELECTORS = {
     TITLE: 'h2',
     DATE: 'span.text-xs',
     EXCERPT: 'p',
+    IMAGE: 'img',
   },
   ARTICLE: {
     BODY: '#textSpeak',
@@ -72,7 +75,15 @@ export class BombinhasCrawler extends BaseCrawler<BombinhasData> {
             const title = anchor.querySelector('h2')?.textContent?.trim() ?? '';
             const date = anchor.querySelector('span.text-xs')?.textContent?.trim() ?? '';
             const excerpt = anchor.querySelector('p')?.textContent?.trim() ?? '';
-            return { url, title, date, excerpt };
+
+            const img = anchor.querySelector('img');
+            const imageCandidates = img
+              ? [img.getAttribute('src'), img.getAttribute('data-src'), img.getAttribute('srcset')].filter(
+                  (v): v is string => !!v,
+                )
+              : [];
+
+            return { url, title, date, excerpt, imageCandidates };
           })
           .filter((c) => !!c.url && !!c.title),
       SITE.baseUrl,
@@ -102,12 +113,15 @@ export class BombinhasCrawler extends BaseCrawler<BombinhasData> {
   }
 
   private buildRawCrawl(card: NewsCard, body: string): RawCrawlInsert {
+    const imageUrl = normalizeImageCandidates(card.imageCandidates, SITE.baseUrl);
+
     return {
       site: SITE.name,
       municipality: SITE.municipality,
       url: card.url,
       title: card.title,
       rawText: `${card.title}\n\n${card.date}\n\n${body}`,
+      imageUrl,
       publishedAt: card.date,
       crawledAt: new Date(),
       processed: false,

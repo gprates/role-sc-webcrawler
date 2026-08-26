@@ -4,12 +4,14 @@ import { SITES } from '../../config/sites.config';
 import { RawCrawlInsert } from '../../types/raw-crawl.types';
 import { navigateTo, elementExists, getText, getTexts } from '../../utils/page.utils';
 import { WaitStrategy } from '../../enums/wait-strategy.enum';
+import { extractCssBackgroundUrl, normalizeImageCandidates } from '../../utils/image.utils';
 
 interface NewsCard {
   url: string;
   title: string;
   date: string;
   excerpt: string;
+  imageCandidate: string;
 }
 
 export interface CamboriuData {
@@ -92,8 +94,11 @@ export class CamboriuCrawler extends BaseCrawler<CamboriuData> {
           const title = card.querySelector('.snc-title')?.textContent?.trim() ?? '';
           const date = card.querySelector('.snc-date')?.textContent?.trim() ?? '';
           const excerpt = card.querySelector('.snc-excerpt')?.textContent?.trim() ?? '';
+          const imageCandidate =
+            (card.querySelector('.snc-card-image .img-scaler') as HTMLElement | null)?.style
+              .backgroundImage ?? '';
 
-          return { url, title, date, excerpt };
+          return { url, title, date, excerpt, imageCandidate };
         })
         .filter((c) => !!c.url && !!c.title),
     );
@@ -101,6 +106,11 @@ export class CamboriuCrawler extends BaseCrawler<CamboriuData> {
 
   private async extractArticle(card: NewsCard): Promise<RawCrawlInsert | null> {
     this.logger.info(`Extraindo artigo: ${card.title}`);
+
+    const imageUrl = normalizeImageCandidates(
+      [extractCssBackgroundUrl(card.imageCandidate)],
+      SITES.CAMBORIU.baseUrl,
+    );
 
     try {
       await navigateTo(this.page, card.url, WaitStrategy.DOM_CONTENT_LOADED);
@@ -113,6 +123,7 @@ export class CamboriuCrawler extends BaseCrawler<CamboriuData> {
         url: card.url,
         title: card.title,
         rawText: `${card.title}\n\n${card.date}\n\n${fullText}`,
+        imageUrl,
         publishedAt: card.date,
         crawledAt: new Date(),
         processed: false,
@@ -125,6 +136,7 @@ export class CamboriuCrawler extends BaseCrawler<CamboriuData> {
         url: card.url,
         title: card.title,
         rawText: `${card.title}\n\n${card.date}\n\n${card.excerpt}`,
+        imageUrl,
         publishedAt: card.date,
         crawledAt: new Date(),
         processed: false,

@@ -4,6 +4,7 @@ import { SITES } from '../../config/sites.config';
 import { RawCrawlInsert } from '../../types/raw-crawl.types';
 import { navigateTo } from '../../utils/page.utils';
 import { WaitStrategy } from '../../enums/wait-strategy.enum';
+import { normalizeImageCandidates } from '../../utils/image.utils';
 
 interface FairItem {
   name: string;
@@ -173,10 +174,11 @@ export class BalnearioCamboriuCrawler extends BaseCrawler<BalnearioCamboriuData>
     try {
       await navigateTo(this.page, card.url, WaitStrategy.NETWORK_IDLE);
       const fullDescription = await this.getEventDescription(this.page);
-      return this.buildRawCrawlFromEvent(card, fullDescription || card.excerpt);
+      const imageUrl = await this.getEventImage(this.page);
+      return this.buildRawCrawlFromEvent(card, fullDescription || card.excerpt, imageUrl);
     } catch (error) {
       this.logger.error(`Erro ao extrair detalhe: ${card.url}`, { error });
-      return this.buildRawCrawlFromEvent(card, card.excerpt);
+      return this.buildRawCrawlFromEvent(card, card.excerpt, null);
     }
   }
 
@@ -199,6 +201,20 @@ export class BalnearioCamboriuCrawler extends BaseCrawler<BalnearioCamboriuData>
     });
   }
 
+  private async getEventImage(page: Page): Promise<string | null> {
+    const candidates = await page.evaluate(() => {
+      const singlePost = document.querySelector('[data-elementor-type="single-post"]');
+      const img = singlePost?.querySelector('.elementor-widget-image img');
+      if (!img) return [];
+
+      return [img.getAttribute('src'), img.getAttribute('data-src'), img.getAttribute('srcset')].filter(
+        (v): v is string => !!v,
+      );
+    });
+
+    return normalizeImageCandidates(candidates, SITE.baseUrl);
+  }
+
   private buildRawCrawlFromFair(fair: FairItem): RawCrawlInsert {
     const url = `${SITE.listingUrl}#${slugify(fair.name)}`;
 
@@ -219,13 +235,18 @@ export class BalnearioCamboriuCrawler extends BaseCrawler<BalnearioCamboriuData>
       url,
       title: fair.name,
       rawText,
+      imageUrl: null,
       publishedAt: RECURRING_LABEL,
       crawledAt: new Date(),
       processed: false,
     };
   }
 
-  private buildRawCrawlFromEvent(card: EventCard, description: string): RawCrawlInsert {
+  private buildRawCrawlFromEvent(
+    card: EventCard,
+    description: string,
+    imageUrl: string | null,
+  ): RawCrawlInsert {
     const categoryLine = card.category ? `${card.category} ` : '';
     const timeLine = card.time ? ` - ${card.time}` : '';
 
@@ -244,6 +265,7 @@ export class BalnearioCamboriuCrawler extends BaseCrawler<BalnearioCamboriuData>
       url: card.url,
       title: card.title,
       rawText,
+      imageUrl,
       publishedAt: card.date,
       crawledAt: new Date(),
       processed: false,

@@ -4,6 +4,7 @@ import { SITES } from '../../config/sites.config';
 import { RawCrawlInsert } from '../../types/raw-crawl.types';
 import { navigateTo, elementExists, getInnerText, getTexts } from '../../utils/page.utils';
 import { WaitStrategy } from '../../enums/wait-strategy.enum';
+import { normalizeImageCandidates } from '../../utils/image.utils';
 
 interface NewsCard {
   url: string;
@@ -11,6 +12,7 @@ interface NewsCard {
   date: string;
   category: string;
   excerpt: string;
+  imageCandidates: string[];
 }
 
 export interface ItajaiCulturalData {
@@ -26,6 +28,7 @@ const SELECTORS = {
     DATE: 'time.api-news-date',
     CATEGORY: 'span.api-news-category',
     EXCERPT: 'p.api-news-description',
+    IMAGE: '.api-news-image img',
     NEXT_PAGE: 'a.next-page',
   },
   ARTICLE: {
@@ -85,13 +88,23 @@ export class ItajaiCulturalCrawler extends BaseCrawler<ItajaiCulturalData> {
       SELECTORS.LISTING.CARD,
       (articles, sel) =>
         articles
-          .map((article) => ({
-            url: article.getAttribute('data-url') ?? '',
-            title: article.querySelector(sel.TITLE)?.textContent?.trim() ?? '',
-            date: article.querySelector(sel.DATE)?.textContent?.trim() ?? '',
-            category: article.querySelector(sel.CATEGORY)?.textContent?.trim() ?? '',
-            excerpt: article.querySelector(sel.EXCERPT)?.textContent?.trim() ?? '',
-          }))
+          .map((article) => {
+            const img = article.querySelector(sel.IMAGE);
+            const imageCandidates = img
+              ? [img.getAttribute('src'), img.getAttribute('data-src'), img.getAttribute('srcset')].filter(
+                  (v): v is string => !!v,
+                )
+              : [];
+
+            return {
+              url: article.getAttribute('data-url') ?? '',
+              title: article.querySelector(sel.TITLE)?.textContent?.trim() ?? '',
+              date: article.querySelector(sel.DATE)?.textContent?.trim() ?? '',
+              category: article.querySelector(sel.CATEGORY)?.textContent?.trim() ?? '',
+              excerpt: article.querySelector(sel.EXCERPT)?.textContent?.trim() ?? '',
+              imageCandidates,
+            };
+          })
           .filter((c) => !!c.url && !!c.title),
       SELECTORS.LISTING,
     );
@@ -132,6 +145,7 @@ export class ItajaiCulturalCrawler extends BaseCrawler<ItajaiCulturalData> {
 
   private buildRawCrawl(card: NewsCard, body: string): RawCrawlInsert {
     const categoryPrefix = card.category ? `[${card.category}]\n\n` : '';
+    const imageUrl = normalizeImageCandidates(card.imageCandidates, SITE.baseUrl);
 
     return {
       site: SITE.name,
@@ -139,6 +153,7 @@ export class ItajaiCulturalCrawler extends BaseCrawler<ItajaiCulturalData> {
       url: card.url,
       title: card.title,
       rawText: `${card.title}\n\n${card.date}\n\n${categoryPrefix}${body}`,
+      imageUrl,
       publishedAt: card.date,
       crawledAt: new Date(),
       processed: false,

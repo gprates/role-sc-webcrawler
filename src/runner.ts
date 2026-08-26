@@ -9,7 +9,9 @@ const logger = createLogger('Runner');
 export interface RunResult {
   crawledPages: number;
   saved: number;
+  backfilled: number;
   skipped: number;
+  withImage: number;
   elapsedSeconds: string;
 }
 
@@ -35,12 +37,21 @@ export const runCrawler = async (key: CrawlerKey, maxPages: number): Promise<Run
     crawledPages: number;
   };
 
+  const withImage = items.filter((item) => !!item.imageUrl).length;
+
   logger.info(
-    `Crawling concluido: ${crawledPages} paginas visitadas, ${items.length} artigos coletados`,
+    `Crawling concluido: ${crawledPages} paginas visitadas, ${items.length} artigos coletados, ${withImage} com imagem`,
   );
 
-  const { saved, skipped } = await RawCrawlRepository.saveMany(db, items);
-  logger.info(`Persistencia: ${saved} salvos, ${skipped} duplicatas ignoradas`);
+  if (items.length > 0 && withImage < items.length) {
+    const semImagem = items.filter((item) => !item.imageUrl).map((item) => item.url);
+    logger.info(`Artigos sem imagem (${semImagem.length}):`, { urls: semImagem.slice(0, 10) });
+  }
+
+  const { saved, backfilled, skipped } = await RawCrawlRepository.saveMany(db, items);
+  logger.info(
+    `Persistencia: ${saved} salvos, ${backfilled} imagens preenchidas, ${skipped} duplicatas ignoradas`,
+  );
 
   await closeDatabaseConnection();
 
@@ -48,5 +59,5 @@ export const runCrawler = async (key: CrawlerKey, maxPages: number): Promise<Run
   const elapsedSeconds = (elapsedMs / 1000).toFixed(1);
   logger.info(`Execucao concluida em ${elapsedSeconds}s`);
 
-  return { crawledPages, saved, skipped, elapsedSeconds };
+  return { crawledPages, saved, backfilled, skipped, withImage, elapsedSeconds };
 };
