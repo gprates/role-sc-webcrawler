@@ -35,6 +35,12 @@ export const SITES = {
     listingUrl: 'https://portobelo.sc.gov.br/category/noticias/eventos/',
     municipality: 'Porto Belo',
   },
+  ITAPEMA: {
+    name: 'Município de Itapema',
+    baseUrl: 'https://www.itapema.sc.gov.br',
+    listingUrl: 'https://www.itapema.sc.gov.br/noticia/',
+    municipality: 'Itapema',
+  },
 } as const satisfies Record<string, SiteConfig>;
 
 export type SiteKey = keyof typeof SITES;

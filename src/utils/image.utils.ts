@@ -24,6 +24,7 @@ const PLACEHOLDER_PATTERNS: RegExp[] = [
   /\bspacer\b/i,
   /loading\.(gif|svg|png)/i,
   /\/1x1\./i,
+  /prefeitura_h\.svg/i,
 ];
 
 /** Ex.: "foto-300x200.jpg 300w, foto-768x512.jpg 768w" */
