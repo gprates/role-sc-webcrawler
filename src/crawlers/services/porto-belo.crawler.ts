@@ -9,9 +9,12 @@ import { normalizeImageCandidates } from '../../utils/image.utils';
 interface NewsCard {
   url: string;
   title: string;
-  date: string;
-  excerpt: string;
   imageCandidates: string[];
+}
+
+interface ArticleDetails {
+  date: string;
+  body: string;
 }
 
 export interface PortoBeloData {
@@ -22,14 +25,14 @@ export interface PortoBeloData {
 
 const SELECTORS = {
   LISTING: {
-    CARD: 'article.post.type-post',
-    TITLE_LINK: '.entry-title a',
-    DATE: 'time.entry-date.published',
-    EXCERPT: '.entry-content p',
-    IMAGE: '.featured-image img',
+    CARD: '.posts .post-item',
+    LINK: 'a.link',
+    TITLE: '.post-title',
+    IMAGE: 'img.post-img',
   },
   ARTICLE: {
     CONTENT: '.entry-content',
+    DATE: 'time.entry-date.published',
   },
 } as const;
 
@@ -93,12 +96,8 @@ export class PortoBeloCrawler extends BaseCrawler<PortoBeloData> {
       (articles, sel) =>
         articles
           .map((article) => {
-            const titleLink = article.querySelector(sel.TITLE_LINK);
-            const url = titleLink?.getAttribute('href') ?? '';
-            const title = titleLink?.textContent?.trim() ?? '';
-            const dateEl = article.querySelector(sel.DATE);
-            const date = dateEl?.getAttribute('datetime') ?? '';
-            const excerpt = article.querySelector(sel.EXCERPT)?.textContent?.trim() ?? '';
+            const url = article.querySelector(sel.LINK)?.getAttribute('href') ?? '';
+            const title = article.querySelector(sel.TITLE)?.textContent?.trim() ?? '';
 
             const img = article.querySelector(sel.IMAGE);
             const imageCandidates = img
@@ -107,7 +106,7 @@ export class PortoBeloCrawler extends BaseCrawler<PortoBeloData> {
                 )
               : [];
 
-            return { url, title, date, excerpt, imageCandidates };
+            return { url, title, imageCandidates };
           })
           .filter((c) => !!c.url && !!c.title),
       SELECTORS.LISTING,
@@ -120,24 +119,25 @@ export class PortoBeloCrawler extends BaseCrawler<PortoBeloData> {
     try {
       await navigateTo(this.page, card.url, WaitStrategy.LOAD);
       await this.page.waitForSelector(SELECTORS.ARTICLE.CONTENT);
-      const fullText = await this.getArticleText(this.page, card.excerpt);
-      return this.buildRawCrawl(card, fullText);
+      const details = await this.getArticleDetails(this.page);
+      return this.buildRawCrawl(card, details);
     } catch (error) {
       this.logger.error(`Erro ao extrair artigo: ${card.url}`, { error });
-      return this.buildRawCrawl(card, card.excerpt);
+      return null;
     }
   }
 
-  private async getArticleText(page: Page, fallback: string): Promise<string> {
-    if (await elementExists(page, SELECTORS.ARTICLE.CONTENT)) {
-      const text = await getInnerText(page, SELECTORS.ARTICLE.CONTENT);
-      if (text.trim().length > 100) return text.trim();
-    }
+  private async getArticleDetails(page: Page): Promise<ArticleDetails> {
+    // A primeira data publicada e a do artigo; as seguintes sao de posts relacionados
+    const date = (await page.getAttribute(SELECTORS.ARTICLE.DATE, 'datetime')) ?? '';
+    const body = (await elementExists(page, SELECTORS.ARTICLE.CONTENT))
+      ? (await getInnerText(page, SELECTORS.ARTICLE.CONTENT)).trim()
+      : '';
 
-    return fallback;
+    return { date, body };
   }
 
-  private buildRawCrawl(card: NewsCard, body: string): RawCrawlInsert {
+  private buildRawCrawl(card: NewsCard, { date, body }: ArticleDetails): RawCrawlInsert {
     const imageUrl = normalizeImageCandidates(card.imageCandidates, SITE.baseUrl);
 
     return {
@@ -145,9 +145,9 @@ export class PortoBeloCrawler extends BaseCrawler<PortoBeloData> {
       municipality: SITE.municipality,
       url: card.url,
       title: card.title,
-      rawText: `${card.title}\n\n${card.date}\n\n${body}`,
+      rawText: `${card.title}\n\n${date}\n\n${body}`,
       imageUrl,
-      publishedAt: card.date,
+      publishedAt: date,
       crawledAt: new Date(),
       processed: false,
     };

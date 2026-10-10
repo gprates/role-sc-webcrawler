@@ -32,7 +32,7 @@ export const SITES = {
   PORTO_BELO: {
     name: 'Município de Porto Belo',
     baseUrl: 'https://portobelo.sc.gov.br',
-    listingUrl: 'https://portobelo.sc.gov.br/category/noticias/eventos/',
+    listingUrl: 'https://portobelo.sc.gov.br/noticias/',
     municipality: 'Porto Belo',
   },
   ITAPEMA: {
