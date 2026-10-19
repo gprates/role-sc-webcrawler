@@ -183,3 +183,7 @@ src/
 scripts/package-lambda.js  empacotamento do lambda.zip
 docs/                   notas sobre o deploy na Lambda e o contrato com o NLP
 ```
+
+## Licença
+
+Distribuído sob a licença MIT. Veja o arquivo LICENSE.

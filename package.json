@@ -1,6 +1,7 @@
 {
   "name": "role-sc-web-crawler",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Web crawler modular com Playwright e TypeScript",
   "main": "dist/index.js",
   "scripts": {
