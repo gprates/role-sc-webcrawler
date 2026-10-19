@@ -115,6 +115,8 @@ export class ItajaiCulturalCrawler extends BaseCrawler<ItajaiCulturalData> {
 
     try {
       await navigateTo(this.page, card.url, WaitStrategy.DOM_CONTENT_LOADED);
+      // A página é um app React que busca a notícia na API depois do carregamento.
+      await this.page.waitForSelector(SELECTORS.ARTICLE.BODY);
       const fullText = await this.getArticleText(this.page, card.excerpt);
       return this.buildRawCrawl(card, fullText);
     } catch (error) {
